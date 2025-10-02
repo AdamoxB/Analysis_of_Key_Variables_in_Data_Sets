@@ -1,10 +1,9 @@
 # --------------------------------------------------------------
-#  Data Feature Analysis – Streamlit + PyCaret
+#  Analysis of Key Variables in Data Sets – Streamlit + PyCaret
 # --------------------------------------------------------------
 
 import os
 import io
-import shutil
 from pathlib import Path
 
 import streamlit as st
@@ -16,7 +15,7 @@ from pycaret.regression import RegressionExperiment
 from pycaret.datasets import get_data
 
 # ------------------------------------------------------------------
-#  CONFIGURATION
+#  CONFIGURATION & STYLING
 # ------------------------------------------------------------------
 st.set_page_config(
     page_title="Data Feature Analysis",
@@ -24,25 +23,27 @@ st.set_page_config(
     page_icon="📊",
 )
 
-# ------------------- COLORS & STYLES ---------------------------------
 BLUE   = "#007BFF"
 GREEN  = "#28A745"
 RED   = "#DC3545"
 
-st.markdown(f"""
-<style>
-h1, h2, h3 {{ color: {BLUE}; }}
-p {{ font-size: 1.1rem; }}
-.metric-value {{ color: {GREEN}; }}
-</style>
-""", unsafe_allow_html=True)
+st.markdown(
+    f"""
+    <style>
+        h1, h2, h3 {{ color: {BLUE}; }}
+        p {{ font-size: 1.1rem; }}
+        .metric-value {{ color: {GREEN}; }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # ------------------------------------------------------------------
-#  CACHING UTILITIES
+#  CACHE‑ED FILE LOADER
 # ------------------------------------------------------------------
 @st.cache_data(show_spinner=False)
 def load_file(file, sep):
-    """Load csv/json/xlsx and return a DataFrame."""
+    """Read csv/json/xlsx into a DataFrame."""
     if file is None:
         return None
 
@@ -50,7 +51,7 @@ def load_file(file, sep):
     try:
         if ext == ".csv":
             df = pd.read_csv(file, sep=sep)
-        elif ext in {".json"}:
+        elif ext == ".json":
             df = pd.read_json(file)
         else:  # .xls/.xlsx
             df = pd.read_excel(file)
@@ -60,8 +61,10 @@ def load_file(file, sep):
         return None
 
 
-@st.experimental_singleton(show_spinner=False)
-def get_experiment(df, target, ignore_features, problem_type):
+# ------------------------------------------------------------------
+#  EXPERIMENT CREATOR (no decorator – we store in session_state)
+# ------------------------------------------------------------------
+def create_experiment(df, target, ignore_features, problem_type):
     """Return a ready‑to‑use PyCaret experiment."""
     if problem_type == "Klasyfikacja":
         exp = ClassificationExperiment()
@@ -75,7 +78,7 @@ def get_experiment(df, target, ignore_features, problem_type):
         session_id=123,
         normalize=True,
         transformation=True,
-        fix_imbalance=True if problem_type == "Klasyfikacja" else False,
+        fix_imbalance=(problem_type == "Klasyfikacja"),
         verbose=False,
     )
     return exp
@@ -92,10 +95,11 @@ uploaded_file = st.sidebar.file_uploader(
 
 sep_options = [",", ";", "\t", " ", "custom"]
 tab_sep = st.sidebar.selectbox("Separator:", sep_options, index=0)
-if tab_sep == "custom":
-    separator = st.sidebar.text_input("Podaj własny separator", value=",")
-else:
-    separator = tab_sep
+separator = (
+    st.sidebar.text_input("Podaj własny separator", value=",")
+    if tab_sep == "custom"
+    else tab_sep
+)
 
 percent_sample = st.sidebar.number_input(
     "📊 Procent danych do analizy",
@@ -104,29 +108,34 @@ percent_sample = st.sidebar.number_input(
     value=50,
 )
 
+
 # ------------------------------------------------------------------
 #  MAIN LOGIC
 # ------------------------------------------------------------------
 if uploaded_file is None:
     st.info("📂 Wybierz plik, aby rozpocząć.")
 else:
-    # ---- Load data -------------------------------------------------
     df = load_file(uploaded_file, separator)
+
     if df is None or df.empty:
         st.warning("Brak danych w pliku.")
     else:
-        # ---- Sample data --------------------------------------------
+        # ---- Sample -------------------------------------------------
         sample_frac = percent_sample / 100
         sample_df = df.sample(frac=sample_frac, random_state=123)
 
-        # ---- Decide problem type ------------------------------------
+        # ---- Detect problem type ------------------------------------
         def detect_problem_type(df):
-            return "Klasyfikacja" if df.select_dtypes(include="object").shape[1] > 0 else "Regresja"
+            return (
+                "Klasyfikacja"
+                if df.select_dtypes(include="object").shape[1] > 0
+                else "Regresja"
+            )
 
         problem_type = detect_problem_type(sample_df)
         st.success(f"📌 **Typ problemu:** {problem_type}")
 
-        # ---- UI – tabs -----------------------------------------------
+        # ---- Tabs ----------------------------------------------------
         tab_overview, tab_missing, tab_experiment, tab_results = st.tabs(
             ["Przegląd danych", "Brakujące dane", f"Setup ({problem_type})", "Wyniki"]
         )
@@ -147,7 +156,7 @@ else:
             st.write(sample_df.describe(include="all").T.round(2))
 
         with tab_experiment:
-            # ---- Column to model ---------------------------------------
+            # ---- Target & ignored columns -----------------------------
             target_col = st.selectbox("Wybierz kolumnę docelową", sample_df.columns)
 
             ignore_cols = st.multiselect(
@@ -156,11 +165,14 @@ else:
                 default=[],
             )
 
-            # ---- Run experiment ----------------------------------------
-            exp = get_experiment(sample_df, target_col, ignore_cols, problem_type)
-            st.session_state["experiment"] = exp  # keep reference
+            # ---- Create experiment -------------------------------------
+            if "experiment" not in st.session_state:
+                st.session_state.experiment = create_experiment(
+                    sample_df, target_col, ignore_cols, problem_type
+                )
+            exp = st.session_state.experiment
 
-            # Choose model set
+            # ---- Model selection ---------------------------------------
             model_set = st.radio(
                 "Zakres porównania modeli",
                 options=["Szybki", "Kompleksowy"],
@@ -172,35 +184,35 @@ else:
             else:
                 compare_kwargs = {}
 
+            # ---- Run training ------------------------------------------
             if st.button("💻 Uruchom modele"):
                 with st.spinner("Trening modeli… (może zająć kilka minut)"):
                     best_model = exp.compare_models(**compare_kwargs)
-                st.session_state["best_model"] = best_model
+                st.session_state.best_model = best_model
                 metrics_df = exp.pull()
-                st.session_state["metrics"] = metrics_df
+                st.session_state.metrics = metrics_df
 
         with tab_results:
-            # ---- Show metrics --------------------------------------------------
+            # ---- Show metrics -----------------------------------------
             if "metrics" in st.session_state:
                 st.subheader("Metryki")
                 st.dataframe(st.session_state.metrics)
 
-            # ---- Plotting ----------------------------------------------------
+            # ---- Plotting ---------------------------------------------
             if "best_model" in st.session_state:
-                best_model = st.session_state["best_model"]
+                best_model = st.session_state.best_model
 
                 st.subheader("Feature Importance")
                 exp.plot_model(best_model, plot="feature", display_format="streamlit")
 
-                st.subheader("Confusion Matrix (classification)")
                 if problem_type == "Klasyfikacja":
+                    st.subheader("Confusion Matrix")
                     exp.plot_model(best_model, plot="confusion_matrix", display_format="streamlit")
 
-                st.subheader("ROC Curve")
-                if problem_type == "Klasyfikacja":
+                    st.subheader("ROC Curve")
                     exp.plot_model(best_model, plot="auc", display_format="streamlit")
 
-            # ---- Save / Load model ------------------------------------------
+            # ---- Save / Load model -------------------------------------
             if st.button("💾 Zapisz najlepszy model"):
                 exp.save_model(st.session_state["best_model"], f"{target_col}_best")
                 st.success(f"Model zapisany jako `{target_col}_best.pkl`")
@@ -209,11 +221,17 @@ else:
                 "📤 Załaduj zapisany model", type="pkl"
             )
             if uploaded_model:
-                loaded_model = exp.load_model(uploaded_model)
-                st.session_state["loaded_model"] = loaded_model
+                # PyCaret's load_model expects a path, so we save to temp file
+                tmp_path = Path("tmp_loaded_model.pkl")
+                with open(tmp_path, "wb") as f:
+                    f.write(uploaded_model.getvalue())
+                loaded_model = exp.load_model(tmp_path)
+                st.session_state.loaded_model = loaded_model
                 st.success("Model załadowany!")
+                # Clean up temp file
+                tmp_path.unlink()
 
-            # ---- Download metrics -------------------------------------------
+            # ---- Download metrics ---------------------------------------
             if "metrics" in st.session_state:
                 csv_bytes = io.BytesIO()
                 st.session_state.metrics.to_csv(csv_bytes, index=False)
@@ -227,12 +245,8 @@ else:
                 )
 
 # ------------------------------------------------------------------
-#  CLEAN‑UP (optional) – delete temp files if any
+#  OPTIONAL CLEAN‑UP (delete temp model file if it still exists)
 # ------------------------------------------------------------------
-temp_files = ["Feature Importance.png", "Confusion Matrix.png", "ROC.png"]
-for f in temp_files:
-    try:
-        os.remove(f)
-    except FileNotFoundError:
-        pass
-
+tmp_path = Path("tmp_loaded_model.pkl")
+if tmp_path.exists():
+    tmp_path.unlink()
