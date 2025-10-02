@@ -1,56 +1,16 @@
-2025-10-02 19:53:57,776:WARNING:
+2025-10-02 23:09:14,541:WARNING:
 'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 19:53:57,776:WARNING:
+2025-10-02 23:09:14,542:WARNING:
 'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 19:53:57,776:WARNING:
+2025-10-02 23:09:14,542:WARNING:
 'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 19:53:57,776:WARNING:
+2025-10-02 23:09:14,542:WARNING:
 'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 19:53:59,184:WARNING:
-'prophet' is a soft dependency and not included in the pycaret installation. Please run: `pip install prophet` to install.
-2025-10-02 20:05:41,052:WARNING:
+2025-10-02 23:12:24,691:WARNING:
 'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 20:05:41,052:WARNING:
+2025-10-02 23:12:24,692:WARNING:
 'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 20:05:41,052:WARNING:
+2025-10-02 23:12:24,692:WARNING:
 'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 20:05:41,052:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 20:23:30,020:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 20:23:30,021:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 20:23:30,021:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 20:23:30,021:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 20:23:31,379:WARNING:
-'prophet' is a soft dependency and not included in the pycaret installation. Please run: `pip install prophet` to install.
-2025-10-02 20:38:27,503:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 20:38:27,504:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 20:38:27,504:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 20:38:27,504:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 20:38:29,842:WARNING:
-'prophet' is a soft dependency and not included in the pycaret installation. Please run: `pip install prophet` to install.
-2025-10-02 22:31:09,431:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 22:31:09,431:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 22:31:09,431:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 22:31:09,431:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 22:31:12,902:WARNING:
-'prophet' is a soft dependency and not included in the pycaret installation. Please run: `pip install prophet` to install.
-2025-10-02 22:32:14,266:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 22:32:14,266:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 22:32:14,266:WARNING:
-'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
-2025-10-02 22:32:14,266:WARNING:
+2025-10-02 23:12:24,692:WARNING:
 'cuml' is a soft dependency and not included in the pycaret installation. Please run: `pip install cuml` to install.
