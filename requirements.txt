@@ -1,50 +1,17 @@
-<<<<<<< HEAD
 # --- Streamlit i podstawowe narzędzia ---
-streamlit==1.32.0
-openai==1.5.0
-python-dotenv==1.0.0
-qdrant_client==1.6.4
-pydub==0.25.1
+streamlit==1.44.0         
+openai==1.70.0            
+python-dotenv==1.1.0      
+qdrant_client==1.13.3    
+pydub==0.25.1             
 
 # --- Pakiety do analizy danych i ML ---
-pandas==2.2.0
-numpy==1.26.4
-scikit-learn==1.4.1
-matplotlib==3.8.4
-seaborn==0.13.2
+pandas==1.5.3             
+numpy==1.26.4              
+scikit-learn==1.4.2        
+matplotlib==3.9.2         
+seaborn==0.13.2           
 
-# --- PyCaret (pełny zestaw) ---
-pycaret[full]==2.5.3   # wersja 2.5.x działa na Python 3.9/3.10
-
-# --- (opcjonalne, ale przydatne) ---
-ffmpeg-python==0.2.0
-=======
-# streamlit
-
-
-# openai
-# python-dotenv
-# qdrant_client
-# pydub
-# pathlib
-
-# requests
-# beautifulsoup4
-
-# streamlit-webrtc
-# av
-# opencv-python
-# SpeechRecognition
-# numpy
-# streamlit-extras
-# streamlit_chat_widget
-# # Audio notes 
-# streamlit
-# streamlit-audiorecorder
-# openai
-# python-dotenv
-# qdrant_client
-# pydub
-
-# sounddevice
-# >>>>>>> f67cac7e05c3d8a8ea8bc0af61ddf72f3e22da59
+# --- Pakiety dodatkowe ---
+pycaret[full]==3.3.2     
+ffmpeg-python==0.2.0      
