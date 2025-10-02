@@ -1,17 +1,22 @@
-# --- Streamlit i podstawowe narzędzia ---
-streamlit==1.44.0         
-openai==1.70.0            
-python-dotenv==1.1.0      
-qdrant_client==1.13.3    
-pydub==0.25.1             
+# Core
+streamlit==1.32.0          # lub najnowsza (np. 1.44.0)
+openai==1.5.0              # lub 1.70.0
+python-dotenv==1.0.0
+qdrant_client==1.6.4
+pydub==0.25.1
 
-# --- Pakiety do analizy danych i ML ---
-pandas==1.5.3             
-numpy==1.26.4              
-scikit-learn==1.4.2        
-matplotlib==3.9.2         
-seaborn==0.13.2           
+# Data & ML
+pandas==2.2.0
+numpy==1.26.4
+scikit-learn==1.4.1
 
-# --- Pakiety dodatkowe ---
-pycaret[full]==3.3.2     
-ffmpeg-python==0.2.0      
+# Visualisation – wersja kompatybilna z pycaret i seaborn
+matplotlib==3.7.1          # < 3.8, >= 3.4 (sprawdza się w obu pakietach)
+
+seaborn==0.13.2            # wymaga matplotlib>=3.4, !=3.6.1
+
+# Jeśli potrzebujesz pycaret
+pycaret[full]==3.3.2       # zależy od matplotlib<3.8 – już spełnione
+
+# Inne przydatne pakiety
+ffmpeg-python==0.2.0
