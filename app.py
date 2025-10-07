@@ -53,7 +53,7 @@ with st.sidebar:
     with col2:
         sep = st.text_input("Podaj własny separator", tab)
     nrproc = st.number_input("Ile procent losowego dataframe wziąć do analizy", 0, 100, 100)
-    st.metric("My metric", 42, 2)
+  
 
 # Logica aplikacji
 if uploaded_file:   
@@ -69,7 +69,7 @@ if uploaded_file:
             st.warning('Ustaw separator!')
         else:
             st.info('Ustawiłeś separator poprawnie :)')
-            kolumna1 = st.sidebar.selectbox('[ 2 ] Wybierz badaną kolumnę odniesienia ', df.columns)
+            kolumna1 = st.sidebar.selectbox('Wybierz badaną kolumnę odniesienia ', df.columns)
             
             def problem_type(df):
                 if df.select_dtypes(include='object').shape[1] > 0:
