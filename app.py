@@ -1,181 +1,182 @@
-# app.py
-"""
-Streamlit application for automated model training with PyCaret.
-"""
-
-import os
-import shutil
-import time
-from pathlib import Path
 import streamlit as st
 import pandas as pd
+import numpy as np
+from pycaret.datasets import get_data
+from pycaret.classification import setup as cl_setup, compare_models as cl_compare_models, create_model as cl_create_model, plot_model as cl_plot_model, finalize_model as cl_finalize_model, save_model as cl_save_model, load_model as cl_load_model, predict_model as cl_predict_model, pull, ClassificationExperiment
+from pycaret.regression import setup as re_setup, compare_models as re_compare_models, create_model as re_create_model, plot_model as re_plot_model, finalize_model as re_finalize_model, save_model as re_save_model, load_model as re_load_model, predict_model as re_predict_model, pull
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+import os
+import io
+import shutil
+import time
 
-# Local imports
-from utils.data_loader import load_data
-from utils.plot_utils import toss
-from models.classification_experiment import ClassificationRunner
+st.set_page_config(layout='wide')
 
-# --------------------------------------------------------------------------- #
-# Configuration (taken from the JSON)
-# --------------------------------------------------------------------------- #
+# Function to load data
+def load_data(uploaded_file, sep):
+    if uploaded_file is not None:
+        if uploaded_file.name.endswith('.csv'):
+            return pd.read_csv(uploaded_file, sep=sep)
+        elif uploaded_file.name.endswith('.json'):
+            return pd.read_json(uploaded_file)
+        elif uploaded_file.name.endswith('.xls') or uploaded_file.name.endswith('.xlsx'):
+            return pd.read_excel(uploaded_file)
+    return None
 
-st.set_page_config(layout="wide")
+# Function to create and display plots
+def toss(model, plot_type, session_key):
+    fig, ax = plt.subplots()
+    cl_plot_model(model, plot=plot_type, display_format="streamlit")
 
-PYCARET_SETUP_PARAMS = {
-    "session_id": 123,
-    "ignore_features": None,          # will be overridden by user selection
-    "fix_imbalance": True,
-    "normalize": True,
-    "transformation": True,
-    "verbose": False,
-}
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    st.session_state[session_key] = buf.getvalue()
+    # Wyświetlanie wykresu z session_state
 
-PLOTS_DIR = Path("plots")
-PLOTS_DIR.mkdir(exist_ok=True)
+    if session_key in st.session_state:
+        st.image(st.session_state[session_key])
 
-# --------------------------------------------------------------------------- #
-# Helper functions
-# --------------------------------------------------------------------------- #
+# Main Page
+st.title("Analiza Kluczowych Cech w Zbiorach Danych")
 
-def delete_old_plots():
-    """Remove all PNG files in the plots directory."""
-    for file_path in PLOTS_DIR.glob("*.png"):
-        try:
-            os.remove(file_path)
-        except FileNotFoundError:
-            print(f"File not found (already deleted): {file_path}")
-        except Exception as e:
-            print(f"Could not delete {file_path}: {e}")
+# Sidebar
+st.sidebar.title("Opcje")
+uploaded_file = st.sidebar.file_uploader("1. Wybierz plik", type=["csv", "json", "xls", "xlsx"])
 
-def save_plot(fig, filename: str):
-    """Save a matplotlib figure to the plots directory."""
-    path = PLOTS_DIR / f"{filename}.png"
-    fig.savefig(path, dpi=300, bbox_inches="tight")
-    return path
+with st.sidebar:
+    col1, col2 = st.columns(2)
+    with col1:
+        tab = st.radio("przecinek/tabulacja:", [",", "	"])
+    with col2:
+        sep = st.text_input("Podaj własny separator", tab)
+    nrproc = st.number_input("Ile procent losowego dataframe wziąć do analizy", 0, 100, 100)
+    st.metric("My metric", 42, 2)
 
-# --------------------------------------------------------------------------- #
-# Streamlit UI
-# --------------------------------------------------------------------------- #
+# Logica aplikacji
+if uploaded_file:   
+    df = load_data(uploaded_file, sep)
 
-st.title("PyCaret Auto‑Model Trainer")
+    if df is not None:
+        nr = nrproc  # Ile % data frame do trenowania
+        min_df = df.sample(round((nr / 100) * len(df)))
 
-uploaded_file = st.sidebar.file_uploader(
-    "Upload CSV/JSON/Excel file",
-    type=["csv", "json", "xlsx", "xls"],
-)
-
-if uploaded_file:
-    # 1. Load data
-    sep = st.sidebar.text_input("CSV separator (default ',')", value=",")
-    df = load_data(uploaded_file, sep=sep)
-    if df is None:
-        st.error("Unsupported file format.")
-    else:
-        st.success(f"Loaded {df.shape[0]} rows × {df.shape[1]} columns")
-
-        # 2. Sample data
-        sample_pct = st.sidebar.slider(
-            "Sample % of data for quick preview",
-            min_value=10,
-            max_value=100,
-            value=20,
-            step=5,
-        )
-        min_df = df.sample(frac=sample_pct / 100, random_state=42)
-        st.subheader("Random sample")
-        st.write(min_df.head())
-
-        # 3. Target & ignore columns
-        target_col = st.sidebar.selectbox(
-            "Target column", options=df.columns.tolist()
-        )
-        cols_to_ignore = st.sidebar.multiselect(
-            "Columns to ignore",
-            options=[c for c in df.columns if c != target_col],
-            default=[],
-        )
-
-        # 4. Detect problem type
-        if any(df[col].dtype == object for col in df.columns):
-            problem_type = "classification"
+        columns_to_ignore = st.multiselect('Ignorowane Kolumny', df.columns.tolist())
+        
+        if len(df.columns) < 2:
+            st.warning('Ustaw separator!')
         else:
-            problem_type = "regression"
+            st.info('Ustawiłeś separator poprawnie :)')
+            kolumna1 = st.sidebar.selectbox('[ 2 ] Wybierz badaną kolumnę odniesienia ', df.columns)
+            
+            def problem_type(df):
+                if df.select_dtypes(include='object').shape[1] > 0:
+                    return "Klasyfikacja"
+                else:
+                    return "Regresja"
 
-        st.sidebar.markdown(f"**Detected problem type:** {problem_type}")
+            info = problem_type(df)
+            st.write(f"Typ problemu: {info}")
 
-        # ------------------------------------------------------------------- #
-        # Tabs
-        # ------------------------------------------------------------------- #
+            tab1, tab2, tab3 = st.tabs(["losowe wiersze", "Brakujące dane", f"Setup : {info}"])
 
-        tab1, tab2, tab3 = st.tabs(
-            ["Random Rows", "Missing Data Analysis", "Setup & Run"]
-        )
+            with tab1:
+                st.header("Losowe Wiersze")
+                st.dataframe(min_df.sample(10))
 
-        with tab1:
-            st.write("Sample of the dataset:")
-            st.dataframe(min_df.head(10))
+            with tab2:
+                taba, tabb = st.tabs(["Brakujące dane w %", "typy danych w kolumnach"])
+                with taba:
+                    st.write(min_df.isna().sum() / len(min_df) * 100)
+                with tabb:
+                    buffer = pd.io.common.StringIO()
+                    min_df.info(buf=buffer)
+                    s = buffer.getvalue()
+                    st.text(s)
+                    st.text(f"----------------------------------------------------------")
+                    st.write(f"unikatowe wartości :")
+                    st.write(min_df.nunique())
+                    st.write(min_df.describe().round(2).T)
 
-        with tab2:
-            st.subheader("Missing data")
-            missing_info = df.isnull().mean() * 100
-            st.table(missing_info.round(2).to_frame(name="Missing %"))
-
-        # ------------------------------------------------------------------- #
-        # Setup & Run Tab
-        # ------------------------------------------------------------------- #
-
-        with tab3:
-            st.subheader(f"PyCaret {problem_type.capitalize()} Setup")
-
-            if problem_type == "classification":
-                # Store ignore features in the params dict
-                PYCARET_SETUP_PARAMS["ignore_features"] = cols_to_ignore
-
-                # Setup experiment
-                st.info("Setting up PyCaret experiment…")
-                runner = ClassificationRunner(
-                    df=df,
-                    target=target_col,
-                    ignore_features=cols_to_ignore,
-                    config=PYCARET_SETUP_PARAMS,
+            with tab3:
+                cl_setup(
+                    data=min_df,
+                    target=kolumna1,
+                    session_id=123,
+                    ignore_features=columns_to_ignore,
+                    fix_imbalance=True,
+                    normalize=True,
+                    transformation=True,
+                    verbose=False,
                 )
-                runner.setup()
-                st.success("Setup complete!")
-
-                # Model comparison
-                compare_range = st.radio(
-                    "Select model comparison range",
-                    options=["Top 5", "All"],
-                    index=0,
+                
+                exp = ClassificationExperiment()
+                exp.setup(
+                    data=min_df,
+                    target=kolumna1,
+                    session_id=123,
+                    ignore_features=columns_to_ignore,
+                    fix_imbalance=True,
+                    normalize=True,
+                    transformation=True,
+                    verbose=False,
                 )
 
-                if st.button("Run Time series models:"):
-                    st.info("Running model comparison…")
-                    best_model = runner.compare(range_top=compare_range)
-                    st.session_state["best_model"] = best_model
-                    st.success(f"Best model: {best_model}")
+                wybor = {
+                    "kompleksowy": {},
+                    "szybki okrojony": {'include': ['rf', 'lr', 'gbc', 'knn'], 'fold': 5, 'verbose': False}
+                }
 
-                    # Pull metrics table
-                    from pycaret.classification import pull
+                conf_compare = st.radio("zakres porównanania modeli ", list(wybor.keys()))
+                
+                if st.button("Run Classification Models"):
+                    cl_best_model = exp.compare_models(**wybor[conf_compare])
+                    st.session_state.cl_best_model = cl_best_model
+                    
+                    metrics = exp.pull()
+                    st.session_state.metrics = metrics
+                    st.write(st.session_state.metrics)
+                    
+                    for file_name in ['Feature Importance.png', 'Confusion Matrix.png', 'AUC.png']:
+                        try:
+                            os.remove(file_name)
+                            print(f"Usunięto: {file_name}")
+                        except FileNotFoundError:
+                            print(f"Plik nie znaleziony: {file_name}")
+                        except Exception as e:
+                            print(f"Błąd przy usuwaniu pliku {file_name}: {e}")
 
-                    metrics_df = pull()
-                    st.subheader("Model Metrics")
-                    st.dataframe(metrics_df)
+                    if hasattr(cl_best_model, 'coef_') or hasattr(cl_best_model, 'feature_importances_'):
+                        cl_plot_model(cl_best_model, plot='feature', display_format="streamlit", save=True)
+                        st.image('Feature Importance.png', use_container_width=True)
+                    else:
+                        st.error(
+                            'Generowanie wykresu istotności cech NIE jest możliwe dla tej kolumny. Zmień kolumnę docelową.'
+                        )
+                    
 
-                    # Delete old plots
-                    delete_old_plots()
+                    cl_plot_model(cl_best_model, plot='confusion_matrix', display_format="streamlit", save=True)
+                    st.image('Confusion Matrix.png', use_container_width=True)
 
-                    # Generate and save plots
-                    plot_types = ["feature_selection", "confusion_matrix", "auc"]
-                    for ptype in plot_types:
-                        fig = runner.plot(p_type=ptype)
-                        path = save_plot(fig, f"{best_model}_{ptype}")
-                        st.image(path)
 
-            else:  # regression (not fully implemented – placeholder)
-                st.warning(
-                    "Regression workflow is not yet implemented. "
-                    "Please upload a classification dataset."
-                )
-else:
-    st.info("Upload a file to begin.")
+                    cl_plot_model(cl_best_model, plot='auc', display_format="streamlit", save=True)
+                    st.image('AUC.png', use_container_width=True)
+
+                if st.button("Zapisz modele"):
+                    for file_name in ['Feature Importance.png', 'Confusion Matrix.png', 'AUC.png']:
+                        if os.path.exists(file_name):
+                            new_file_name = file_name.replace('.png', '_saved.png')
+                            shutil.copy(file_name, new_file_name)
+                        else:
+                            st.warning(f'Brak pliku: {file_name}')
+
+                if st.button("wczytaj modele"):
+                    st.write(st.session_state.metrics)
+                    for file_name in ['Feature Importance_saved.png', 'Confusion Matrix_saved.png', 'AUC_saved.png']:
+                        if os.path.exists(file_name):
+                            st.image(file_name, use_container_width=True)
+                        else:
+                            st.warning(f'Brak pliku do wyświetlenia : {file_name}')
+
