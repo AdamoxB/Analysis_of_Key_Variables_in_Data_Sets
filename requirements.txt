@@ -1,12 +1,20 @@
+streamlit==1.50.0
+streamlit-pandas-profiling==0.1.3
+pandas==2.1.4
+numpy==1.26.4
+matplotlib==3.7.5
+seaborn==0.13.2
+scikit-learn==1.4.2
+pycaret==3.3.2
 
-streamlit>=1.10
-pandas>=1.5.3
-numpy>=1.23.5 
-pycaret>=3.0
-matplotlib>=3.5.2  
-seaborn>=0.11.2  
-scikit-learn>=1.1.3
-streamlit-pandas-profiling>=0.1.3   # najnowsza dostępna wersja
+# streamlit>=1.10
+# pandas>=1.5.3
+# numpy>=1.23.5 
+# pycaret>=3.0
+# matplotlib>=3.5.2  
+# seaborn>=0.11.2  
+# scikit-learn>=1.1.3
+# streamlit-pandas-profiling>=0.1.3   # najnowsza dostępna wersja
 
 
 # # Base requirements
