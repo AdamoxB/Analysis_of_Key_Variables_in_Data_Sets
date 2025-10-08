@@ -16,28 +16,7 @@ import shutil
 
 st.set_page_config(layout='wide')
 
-# def read_uploaded_file(file) -> pd.DataFrame:
-#     """Return a pandas DataFrame from an uploaded CSV / Excel file."""
-#     try:
-#         if file.name.endswith(".csv"):
-#             df = pd.read_csv(file)
-#         else:  # .xlsx, .xls
-#             df = pd.read_excel(file)
-#         return df
-#     except Exception as e:
-#         st.error(f"Could not read the file: {e}")
-#         return pd.DataFrame()
 
-# # Function to load data
-# def load_data(uploaded_file, sep):
-#     if uploaded_file is not None:
-#         if uploaded_file.name.endswith('.csv'):
-#             return pd.read_csv(uploaded_file, sep=sep)
-#         elif uploaded_file.name.endswith('.json'):
-#             return pd.read_json(uploaded_file)
-#         elif uploaded_file.name.endswith('.xls') or uploaded_file.name.endswith('.xlsx'):
-#             return pd.read_excel(uploaded_file)
-#     return None
 def load_data(uploaded_file, sep):
     try:
         if uploaded_file.name.endswith('.csv'):
@@ -52,26 +31,6 @@ def load_data(uploaded_file, sep):
 def read_uploaded_file(file, sep) -> pd.DataFrame:
     """Return a pandas DataFrame from an uploaded CSV / Excel file."""
     return load_data(file, sep)
-# def load_data(uploaded_file, sep):
-#     try:
-#         if uploaded_file is not None:
-#             filename = uploaded_file.name.lower()
-            
-#             if filename.endswith('.csv'):
-#                 return pd.read_csv(uploaded_file, sep=sep)
-#             elif filename.endswith('.json'):
-#                 return pd.read_json(uploaded_file)
-#             elif filename.endswith('.xls') or filename.endswith('.xlsx'):
-#                 return pd.read_excel(uploaded_file)
-#             else:
-#                 st.error("Unsupported file type")
-#                 return None
-#         else:
-#             st.error("No file uploaded")
-#             return None
-#     except Exception as e:
-#         st.error(f"Could not read the file: {e}")
-#         return None
 
 # Function to create and display plots
 def toss(model, plot_type, session_key):
