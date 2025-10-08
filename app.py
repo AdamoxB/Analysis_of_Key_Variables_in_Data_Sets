@@ -3,37 +3,58 @@ import pandas as pd
 import numpy as np
 from pycaret.datasets import get_data
 from pycaret.classification import setup as cl_setup, compare_models as cl_compare_models, create_model as cl_create_model, plot_model as cl_plot_model, finalize_model as cl_finalize_model, save_model as cl_save_model, load_model as cl_load_model, predict_model as cl_predict_model, pull, ClassificationExperiment
-from pycaret.regression import setup as re_setup, compare_models as re_compare_models, create_model as re_create_model, plot_model as re_plot_model, finalize_model as re_finalize_model, save_model as re_save_model, load_model as re_load_model, predict_model as re_predict_model, pull
+from pycaret.regression import setup as re_setup, compare_models as re_compare_models, create_model as re_create_model, plot_model as re_plot_model, finalize_model as re_finalize_model, save_model as re_save_model, load_model as re_load_model, predict_model as re_predict_model, pull, RegressionExperiment
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 import os
 import io
 import shutil
-import random
-
-
-
+import random  # Importowanie modułu 'random'
 
 st.set_page_config(layout='wide')
 
-
-test_df = []
-for _ in range(100):
+# Dane testowe regresji
+data = []
+for _ in range(1000):
     x0 = random.randint(100, 200)
     x1 = random.randint(0, 50)
-    noise = random.randint(0, 10)
-
-    # noise = random.gauss(0, 10)
+    noise = random.gauss(0, 10)
     y = 2 * x0 + 0.9 * x1 + noise
-    test_df.append({
+    data.append({
         'x0': x0,
         'x1': x1,
         'x2': random.randint(0, 10),
         'y': y,
     })
-df = pd.DataFrame(test_df)
-# df.to_csv('8.07.csv', index=False)
+
+df_test = pd.DataFrame(data)
+
+#================================
+def plot_scatter(df):
+    sns.set(style="whitegrid")
+    plt.figure(figsize=(10, 6))
+    sns.scatterplot(data=df, x='x0', y='y')
+    plt.title('Scatter Plot of x0 vs y')
+    st.pyplot(plt)
+
+# def display_setup_info(setup):
+#     st.write("Setup Information:")
+#     for key, value in setup.items():
+#         if isinstance(value, dict):
+#             st.write(f"{key}:")
+#             for sub_key, sub_value in value.items():
+#                 st.write(f"  {sub_key}: {sub_value}")
+#         else:
+#             st.write(f"{key}: {value}")
+
+
+
+#==========================
+
+
+
+
 
 
 def load_data(uploaded_file, sep):
@@ -65,35 +86,22 @@ def toss(model, plot_type, session_key):
     if session_key in st.session_state:
         st.image(st.session_state[session_key])
 
-
-
-
-
 # Main Page
 st.title("Analiza Kluczowych Cech w Zbiorach Danych")
 
 # Sidebar
 # st.sidebar.title("Opcje")
 
-
 # uploaded_file = st.sidebar.file_uploader("1. Wybierz plik", type=["csv", "json", "xls", "xlsx"])
 with st.sidebar:
-    # Tworzenie DataFrame testowego
-
-
-
     st.header("📂 Select Dataset")
-
     # 1. Built‑in PyCaret datasets (you can add more if you like)
 
     builtin_ds = ["iris", "juice", "titanic", "diabetes","insurance","diamond"]
 
-    builtin_ds.append("test_df")
-
-    # selected_builtin = st.selectbox("Choose a built‑in dataset", ["-- none --"] + builtin_ds)
-
-        # Wybór zbioru danych
-    selected_builtin = st.sidebar.selectbox("Choose a dataset", ["-- none --"] + builtin_ds)
+    # Dodawanie DataFrame testowego do listy zbiorników danych
+    builtin_ds.append("df_test")
+    selected_builtin = st.selectbox("Choose a built‑in dataset", ["-- none --"] + builtin_ds)
 
 
 
@@ -120,23 +128,19 @@ with st.sidebar:
 
 
 df: pd.DataFrame | None = None
-
+if selected_builtin == "df_test":
+    df = df_test
 
 if selected_builtin != "-- none --":
     # load dataset from pycaret
-
     try:
-        # df = get_data(selected_builtin, profile=False)
-        if selected_builtin == "test_df":
-            df = test_df
-        elif uploaded_file is not None:
-            df = pd.read_csv(uploaded_file)
-        else:
-            df = get_data(selected_builtin, profile=False)
-
+        df = get_data(selected_builtin, profile=False)
         st.success(f"✅ Loaded **{selected_builtin}** dataset.")
     except Exception as e:
         st.error(f"Error loading built‑in dataset: {e}")
+
+elif selected_builtin == "df_test":
+    df = df_test
 
 if uploaded_file is not None:
     # overwrite if user uploads a file
@@ -276,8 +280,9 @@ if df is not None and not df.empty:
 
                     # === REGRESSION SETUP ===
                     elif info == "Regresja":
-                        st.subheader("🚀 Setup: Regresja")
 
+                        st.subheader("🚀 Setup: Regresja")
+                        
                         # Setup pycaret regression
                         re_setup(
                             data=min_df,
@@ -289,7 +294,9 @@ if df is not None and not df.empty:
                             verbose=False,
                         )
 
-                        exp_re = ClassificationExperiment()  # Reuse same class, but use regression setup
+                        exp_re = RegressionExperiment()  # Reuse same class, but use regression setup
+
+
                         exp_re.setup(
                             data=min_df,
                             target=kolumna1,
@@ -303,10 +310,13 @@ if df is not None and not df.empty:
                         # Model comparison options
                         wybor_re = {
                             "kompleksowy": {},
-                            "szybki okrojony": {'include': ['rf', 'lr', 'gbc', 'knn'], 'fold': 5, 'verbose': False}
+                            "szybki okrojony": {'include': ['rf', 'lr', 'xgboost', 'knn'], 'fold': 5, 'verbose': False}
                         }
 
                         conf_compare_re = st.radio("zakres porównanania modeli ", list(wybor_re.keys()))
+
+
+
 
                         if st.button("Run Regression Models"):
                             re_best_model = exp_re.compare_models(**wybor_re[conf_compare_re])
@@ -373,5 +383,9 @@ if df is not None and not df.empty:
                                 else:
                                     st.warning(f'Brak pliku do wyświetlenia: {file_name}')
 
+                          
+                        plot_scatter(min_df)#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+                        # display_setup_info(exp_re.setup_config)          
 else:
-    st.info("Wgraj plik, aby rozpocząć analizę.")    
+    st.info("Wgraj plik, aby rozpocząć analizę.")
