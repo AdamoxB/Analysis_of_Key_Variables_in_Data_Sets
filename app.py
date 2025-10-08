@@ -339,14 +339,15 @@ if df is not None and not df.empty:
                                     st.warning(f"Błąd podczas usuwania {file_name}: {e}")
 
                             # Residuals Plot
-                            fig = re_plot_model(re_best_model, plot='residuals')
-                            st.pyplot(fig)
+                            # fig = re_plot_model(re_best_model, plot='residuals')
+                            # st.pyplot(fig)
+                            
                             # fig = re_plot_model(re_best_model, plot='residuals')
                             # fig.savefig('Residuals.png')
                             # st.pyplot(fig)
 
-                            # re_plot_model(re_best_model, plot='residuals', display_format="streamlit", save=True)
-                            # st.image('Residuals.png', use_container_width=True)
+                            re_plot_model(re_best_model, plot='residuals', display_format="streamlit", save=True)
+                            st.image('Residuals.png', use_container_width=True)
 
                             # Prediction Error
                             re_plot_model(re_best_model, plot='prediction_error', display_format="streamlit", save=True)
