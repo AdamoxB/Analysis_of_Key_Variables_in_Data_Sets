@@ -98,8 +98,7 @@ with st.sidebar:
     st.header("📂 Select Dataset")
     # 1. Built‑in PyCaret datasets (you can add more if you like)
     builtin_ds = [
-        "iris", "juice", "titanic", "diabetes", "winequality-red",
-        "boston_housing", "adult"
+        "iris", "juice", "titanic", "diabetes"
     ]
     selected_builtin = st.selectbox("Choose a built‑in dataset", ["-- none --"] + builtin_ds)
 
