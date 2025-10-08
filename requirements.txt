@@ -74,15 +74,12 @@ pmdarima==2.0.4
 prompt-toolkit==3.0.52
 protobuf==6.32.1
 
-39.
 psutil==7.1.0
 ptyprocess==0.7.0
 pure-eval==0.2.3
 puremagic==1.30
 pyarrow==21.0.0
-
-39.486
-412]  pycaret==3.3.2
+pycaret==3.3.2
 pydantic==2.12.0
 pydantic-core==2.41.1
 pydeck==0.9.1
