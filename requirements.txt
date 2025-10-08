@@ -1,10 +1,28 @@
-streamlit==1.26.0  # Check the latest version as of now.
-pandas==1.4.3     # Latest version as of now.
-numpy==1.21.5     # Latest version as of now.
-pycaret==3.0.1    # Latest version as of now, please check PyCaret's compatibility with Python 3.13.
-matplotlib==3.5.1 # Latest version as of now.
-seaborn==0.11.2   # Latest version as of now.
-scikit-learn==1.0.2 # Latest version as of now.
+
+streamlit==1.20.0          # Web framework for creating web applications
+pandas==1.5.3              # Data manipulation library
+numpy==1.23.5              # Numerical computing library
+pycaret==3.0.4             # Low-code machine learning library in Python
+matplotlib==3.5.2          # Plotting library
+seaborn==0.11.2            # Statistical data visualization
+sklearn                   # Scikit-learn for machine learning pipelines
+joblib==1.1.0              # Library for saving and loading models
+plotly==5.7.0              # Interactive plotting library
+scikit-learn==1.0         # Machine learning in Python
+statsmodels               # Statistical modeling and diagnostics
+shutil==4.3.4              # Utilities to supplement the shutil module
+
+
+
+
+
+# streamlit==1.26.0  # Check the latest version as of now.
+# pandas==1.4.3     # Latest version as of now.
+# numpy==1.21.5     # Latest version as of now.
+# pycaret==3.0.1    # Latest version as of now, please check PyCaret's compatibility with Python 3.13.
+# matplotlib==3.5.1 # Latest version as of now.
+# seaborn==0.11.2   # Latest version as of now.
+# scikit-learn==1.0.2 # Latest version as of now.
 
 
 
