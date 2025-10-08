@@ -10,11 +10,30 @@ import seaborn as sns
 import os
 import io
 import shutil
+import random
 
 
 
 
 st.set_page_config(layout='wide')
+
+
+test_df = []
+for _ in range(100):
+    x0 = random.randint(100, 200)
+    x1 = random.randint(0, 50)
+    noise = random.randint(0, 10)
+
+    # noise = random.gauss(0, 10)
+    y = 2 * x0 + 0.9 * x1 + noise
+    test_df.append({
+        'x0': x0,
+        'x1': x1,
+        'x2': random.randint(0, 10),
+        'y': y,
+    })
+df = pd.DataFrame(test_df)
+# df.to_csv('8.07.csv', index=False)
 
 
 def load_data(uploaded_file, sep):
@@ -46,38 +65,58 @@ def toss(model, plot_type, session_key):
     if session_key in st.session_state:
         st.image(st.session_state[session_key])
 
+
+
+
+
 # Main Page
 st.title("Analiza Kluczowych Cech w Zbiorach Danych")
 
 # Sidebar
 # st.sidebar.title("Opcje")
 
+
 # uploaded_file = st.sidebar.file_uploader("1. Wybierz plik", type=["csv", "json", "xls", "xlsx"])
 with st.sidebar:
+    # Tworzenie DataFrame testowego
+
+
+
     st.header("📂 Select Dataset")
+
     # 1. Built‑in PyCaret datasets (you can add more if you like)
-    builtin_ds = [
-        "iris", "juice", "titanic", "diabetes"
-    ]
-    selected_builtin = st.selectbox("Choose a built‑in dataset", ["-- none --"] + builtin_ds)
+
+    builtin_ds = ["iris", "juice", "titanic", "diabetes","insurance","diamond"]
+
+    builtin_ds.append("test_df")
+
+    # selected_builtin = st.selectbox("Choose a built‑in dataset", ["-- none --"] + builtin_ds)
+
+        # Wybór zbioru danych
+    selected_builtin = st.sidebar.selectbox("Choose a dataset", ["-- none --"] + builtin_ds)
+
+
 
     # 2. File uploader
     st.subheader("Upload your own data")
-    uploaded_file = st.file_uploader(
-        "CSV / Excel",
+    uploaded_file = st.file_uploader("CSV / Excel",
         type=["csv", "xlsx"],
         accept_multiple_files=False,
     )
-
-
-with st.sidebar:
     col1, col2 = st.columns(2)
     with col1:
         tab = st.radio("przecinek/tabulacja:", [",", "	"])
     with col2:
         sep = st.text_input("Podaj własny separator", tab)
     nrproc = st.number_input("Ile procent losowego dataframe wziąć do analizy", 0, 100, 100)
-df: pd.DataFrame | None = None
+
+# with st.sidebar:
+    # col1, col2 = st.columns(2)
+    # with col1:
+    #     tab = st.radio("przecinek/tabulacja:", [",", "	"])
+    # with col2:
+    #     sep = st.text_input("Podaj własny separator", tab)
+    # nrproc = st.number_input("Ile procent losowego dataframe wziąć do analizy", 0, 100, 100)
 
 
 df: pd.DataFrame | None = None
@@ -85,8 +124,16 @@ df: pd.DataFrame | None = None
 
 if selected_builtin != "-- none --":
     # load dataset from pycaret
+
     try:
-        df = get_data(selected_builtin, profile=False)
+        # df = get_data(selected_builtin, profile=False)
+        if selected_builtin == "test_df":
+            df = test_df
+        elif uploaded_file is not None:
+            df = pd.read_csv(uploaded_file)
+        else:
+            df = get_data(selected_builtin, profile=False)
+
         st.success(f"✅ Loaded **{selected_builtin}** dataset.")
     except Exception as e:
         st.error(f"Error loading built‑in dataset: {e}")
@@ -102,7 +149,7 @@ if uploaded_file is not None:
 if df is not None and not df.empty:
 
     if not df.empty:
-        # st.success("✅ Uploaded data loaded.")
+        # st.success("✅ Uploaded data .")
 
         if df is not None:
             nr = nrproc  # Ile % data frame do trenowania
@@ -146,83 +193,185 @@ if df is not None and not df.empty:
                         st.write(min_df.describe().round(2).T)
 
                 with tab3:
-                    cl_setup(
-                        data=min_df,
-                        target=kolumna1,
-                        session_id=123,
-                        ignore_features=columns_to_ignore,
-                        fix_imbalance=True,
-                        normalize=True,
-                        transformation=True,
-                        verbose=False,
-                    )
-                    
-                    exp = ClassificationExperiment()
-                    exp.setup(
-                        data=min_df,
-                        target=kolumna1,
-                        session_id=123,
-                        ignore_features=columns_to_ignore,
-                        fix_imbalance=True,
-                        normalize=True,
-                        transformation=True,
-                        verbose=False,
-                    )
-
-                    wybor = {
-                        "kompleksowy": {},
-                        "szybki okrojony": {'include': ['rf', 'lr', 'gbc', 'knn'], 'fold': 5, 'verbose': False}
-                    }
-
-                    conf_compare = st.radio("zakres porównanania modeli ", list(wybor.keys()))
-                    
-                    if st.button("Run Classification Models"):
-                        cl_best_model = exp.compare_models(**wybor[conf_compare])
-                        st.session_state.cl_best_model = cl_best_model
+                    if info == "Klasyfikacja":
+                        # === CLASSIFICATION SETUP ===                    # tab_cl, tab_re = st.tabs([""🚀 Setup: Klasyfikacja", "typy danych w kolumnach"])
+                        cl_setup(
+                            data=min_df,
+                            target=kolumna1,
+                            session_id=123,
+                            ignore_features=columns_to_ignore,
+                            fix_imbalance=True,
+                            normalize=True,
+                            transformation=True,
+                            verbose=False,
+                        )
                         
-                        metrics = exp.pull()
-                        st.session_state.metrics = metrics
-                        st.write(st.session_state.metrics)
+                        exp = ClassificationExperiment()
+                        exp.setup(
+                            data=min_df,
+                            target=kolumna1,
+                            session_id=123,
+                            ignore_features=columns_to_ignore,
+                            fix_imbalance=True,
+                            normalize=True,
+                            transformation=True,
+                            verbose=False,
+                        )
+
+                        wybor = {
+                            "kompleksowy": {},
+                            "szybki okrojony": {'include': ['rf', 'lr', 'gbc', 'knn'], 'fold': 5, 'verbose': False}
+                        }
+
+                        conf_compare = st.radio("zakres porównanania modeli ", list(wybor.keys()))
                         
-                        for file_name in ['Feature Importance.png', 'Confusion Matrix.png', 'AUC.png']:
-                            try:
-                                os.remove(file_name)
-                                print(f"Usunięto: {file_name}")
-                            except FileNotFoundError:
-                                print(f"Plik nie znaleziony: {file_name}")
-                            except Exception as e:
-                                print(f"Błąd przy usuwaniu pliku {file_name}: {e}")
+                        if st.button("Run Classification Models"):
+                            cl_best_model = exp.compare_models(**wybor[conf_compare])
+                            st.session_state.cl_best_model = cl_best_model
+                            
+                            metrics = exp.pull()
+                            st.session_state.metrics = metrics
+                            st.write(st.session_state.metrics)
+                            
+                            for file_name in ['Feature Importance.png', 'Confusion Matrix.png', 'AUC.png']:
+                                try:
+                                    os.remove(file_name)
+                                    print(f"Usunięto: {file_name}")
+                                except FileNotFoundError:
+                                    print(f"Plik nie znaleziony: {file_name}")
+                                except Exception as e:
+                                    print(f"Błąd przy usuwaniu pliku {file_name}: {e}")
 
-                        if hasattr(cl_best_model, 'coef_') or hasattr(cl_best_model, 'feature_importances_'):
-                            cl_plot_model(cl_best_model, plot='feature', display_format="streamlit", save=True)
-                            st.image('Feature Importance.png', use_container_width=True)
-                        else:
-                            st.error(
-                                'Generowanie wykresu istotności cech NIE jest możliwe dla tej kolumny. Zmień kolumnę docelową.'
-                            )
-                        
-
-                        cl_plot_model(cl_best_model, plot='confusion_matrix', display_format="streamlit", save=True)
-                        st.image('Confusion Matrix.png', use_container_width=True)
-
-
-                        cl_plot_model(cl_best_model, plot='auc', display_format="streamlit", save=True)
-                        st.image('AUC.png', use_container_width=True)
-
-                    if st.button("Zapisz modele"):
-                        for file_name in ['Feature Importance.png', 'Confusion Matrix.png', 'AUC.png']:
-                            if os.path.exists(file_name):
-                                new_file_name = file_name.replace('.png', '_saved.png')
-                                shutil.copy(file_name, new_file_name)
+                            if hasattr(cl_best_model, 'coef_') or hasattr(cl_best_model, 'feature_importances_'):
+                                cl_plot_model(cl_best_model, plot='feature', display_format="streamlit", save=True)
+                                st.image('Feature Importance.png', use_container_width=True)
                             else:
-                                st.warning(f'Brak pliku: {file_name}')
+                                st.error(
+                                    'Generowanie wykresu istotności cech NIE jest możliwe dla tej kolumny. Zmień kolumnę docelową.'
+                                )
+                            
 
-                    if st.button("wczytaj modele"):
-                        st.write(st.session_state.metrics)
-                        for file_name in ['Feature Importance_saved.png', 'Confusion Matrix_saved.png', 'AUC_saved.png']:
-                            if os.path.exists(file_name):
-                                st.image(file_name, use_container_width=True)
+                            cl_plot_model(cl_best_model, plot='confusion_matrix', display_format="streamlit", save=True)
+                            st.image('Confusion Matrix.png', use_container_width=True)
+
+
+                            cl_plot_model(cl_best_model, plot='auc', display_format="streamlit", save=True)
+                            st.image('AUC.png', use_container_width=True)
+
+                        if st.button("Zapisz modele"):
+                            for file_name in ['Feature Importance.png', 'Confusion Matrix.png', 'AUC.png']:
+                                if os.path.exists(file_name):
+                                    new_file_name = file_name.replace('.png', '_saved.png')
+                                    shutil.copy(file_name, new_file_name)
+                                else:
+                                    st.warning(f'Brak pliku: {file_name}')
+
+                        if st.button("wczytaj modele"):
+                            st.write(st.session_state.metrics)
+                            for file_name in ['Feature Importance_saved.png', 'Confusion Matrix_saved.png', 'AUC_saved.png']:
+                                if os.path.exists(file_name):
+                                    st.image(file_name, use_container_width=True)
+                                else:
+                                    st.warning(f'Brak pliku do wyświetlenia : {file_name}')
+
+                    # === REGRESSION SETUP ===
+                    elif info == "Regresja":
+                        st.subheader("🚀 Setup: Regresja")
+
+                        # Setup pycaret regression
+                        re_setup(
+                            data=min_df,
+                            target=kolumna1,
+                            session_id=123,
+                            ignore_features=columns_to_ignore,
+                            normalize=True,
+                            transformation=True,
+                            verbose=False,
+                        )
+
+                        exp_re = ClassificationExperiment()  # Reuse same class, but use regression setup
+                        exp_re.setup(
+                            data=min_df,
+                            target=kolumna1,
+                            session_id=123,
+                            ignore_features=columns_to_ignore,
+                            normalize=True,
+                            transformation=True,
+                            verbose=False,
+                        )
+
+                        # Model comparison options
+                        wybor_re = {
+                            "kompleksowy": {},
+                            "szybki okrojony": {'include': ['rf', 'lr', 'gbc', 'knn'], 'fold': 5, 'verbose': False}
+                        }
+
+                        conf_compare_re = st.radio("zakres porównanania modeli ", list(wybor_re.keys()))
+
+                        if st.button("Run Regression Models"):
+                            re_best_model = exp_re.compare_models(**wybor_re[conf_compare_re])
+                            st.session_state.re_best_model = re_best_model
+
+                            metrics = exp_re.pull()
+                            st.session_state.metrics = metrics
+                            st.write(st.session_state.metrics)
+
+                            # Clean up old plots
+                            for file_name in [
+                                'Residuals.png', 'Prediction Error.png', 'R2.png',
+                                'Prediction vs Actual.png', 'Feature Importance.png'
+                            ]:
+                                try:
+                                    os.remove(file_name)
+                                except FileNotFoundError:
+                                    pass
+                                except Exception as e:
+                                    st.warning(f"Błąd podczas usuwania {file_name}: {e}")
+
+                            # Residuals Plot
+                            re_plot_model(re_best_model, plot='residuals', display_format="streamlit", save=True)
+                            st.image('Residuals.png', use_container_width=True)
+
+                            # Prediction Error
+                            re_plot_model(re_best_model, plot='prediction_error', display_format="streamlit", save=True)
+                            st.image('Prediction Error.png', use_container_width=True)
+
+                            # R²
+                            re_plot_model(re_best_model, plot='r2', display_format="streamlit", save=True)
+                            st.image('R2.png', use_container_width=True)
+
+                            # Prediction vs Actual
+                            re_plot_model(re_best_model, plot='prediction_error', display_format="streamlit", save=True)
+                            st.image('Prediction vs Actual.png', use_container_width=True)
+
+                            # Feature Importance
+                            if hasattr(re_best_model, 'coef_') or hasattr(re_best_model, 'feature_importances_'):
+                                re_plot_model(re_best_model, plot='feature', display_format="streamlit", save=True)
+                                st.image('Feature Importance.png', use_container_width=True)
                             else:
-                                st.warning(f'Brak pliku do wyświetlenia : {file_name}')
+                                st.warning('Brak danych o istotności cech dla tego modelu.')
 
-    
+                        if st.button("Zapisz modele (Regresja)"):
+                            for file_name in [
+                                'Residuals.png', 'Prediction Error.png', 'R2.png',
+                                'Prediction vs Actual.png', 'Feature Importance.png'
+                            ]:
+                                if os.path.exists(file_name):
+                                    new_file_name = file_name.replace('.png', '_saved.png')
+                                    shutil.copy(file_name, new_file_name)
+                                else:
+                                    st.warning(f'Brak pliku: {file_name}')
+
+                        if st.button("Wczytaj modele (Regresja)"):
+                            st.write(st.session_state.metrics)
+                            for file_name in [
+                                'Residuals_saved.png', 'Prediction Error_saved.png', 'R2_saved.png',
+                                'Prediction vs Actual_saved.png', 'Feature Importance_saved.png'
+                            ]:
+                                if os.path.exists(file_name):
+                                    st.image(file_name, use_container_width=True)
+                                else:
+                                    st.warning(f'Brak pliku do wyświetlenia: {file_name}')
+
+else:
+    st.info("Wgraj plik, aby rozpocząć analizę.")    
