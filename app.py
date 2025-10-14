@@ -81,7 +81,7 @@ def toss(model, plot_type, session_key):
         st.image(st.session_state[session_key])
 
 # Main Page
-st.title("Key Feature Analysis in Datasets")
+st.title("Analysis_of_Key_Variables_in_Data_Sets")
 
 # Sidebar
 with st.sidebar:
